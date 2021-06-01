@@ -64,7 +64,7 @@ class main_app:
             my_cells.draw()
             pygame.display.flip()
             self.state = self.rule(self.state)
-            time.sleep(1)
+            time.sleep(0.01)
 
             
         

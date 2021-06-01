@@ -47,3 +47,8 @@ def get_neighbors_count(current_state,i,j,rows,cols):
     return alive
     
     
+functions = {'one':rule_one,
+             'blank':rule_blank,
+             'conway':conway_game_rule
+             }
+
