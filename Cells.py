@@ -1,6 +1,7 @@
 import pygame
 import sys
 import time
+import numpy as np
 
 class cell:
     def __init__(self,w,h,left_top,screen,color):
@@ -42,7 +43,8 @@ class cells:
 
 class main_app:
     def __init__(self,initial_state,rule):
-        self.state = initial_state        
+        self.state = initial_state
+        self.piece_display = (0,self.state.shape[0],0,self.state.shape[1])
         self.rule = rule
         self.run()
 
@@ -52,19 +54,86 @@ class main_app:
         w, h = pygame.display.get_surface().get_size()
         black = (0,0,0)
         while True:
-            for event in pygame.event.get():
+            self.handle_events()
+            self.screen.fill(black)
+            self.update_display()
+            my_cells = cells(self.display,w,h,self.screen)
+            my_cells.draw()
+            pygame.display.flip()
+            self.state = self.rule(self.state)            
+            time.sleep(0.01)
+
+    def handle_events(self):
+        for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         sys.exit()
+                    if event.key == pygame.K_f:
+                        #zoom in
+                        self.proportion(1,1,1,1)
+                    if event.key == pygame.K_g:
+                        #zoom out
+                        self.proportion(-1,-1,-1,-1)
+                    if event.key == pygame.K_LEFT:
+                        #pan left
+                        self.proportion(0,0,-1,1)
+                    if event.key == pygame.K_RIGHT:
+                        #pan left
+                        self.proportion(0,0,1,-1)
+                    if event.key == pygame.K_UP:
+                        #pan up
+                        self.proportion(-1,1,0,0)
+                    if event.key == pygame.K_DOWN:
+                        #pan down
+                        self.proportion(1,-1,0,0)
 
-            self.screen.fill(black)
-            my_cells = cells(self.state,w,h,self.screen)
-            my_cells.draw()
-            pygame.display.flip()
-            self.state = self.rule(self.state)
-            time.sleep(0.01)
-
+    def update_display(self):
+        self.display = self.state[self.piece_display[0]:self.piece_display[1],self.piece_display[2]:self.piece_display[3]]
+        
+                
+    def proportion(self,up,down,left,right):
+        row_top,row_bottom,col_left,col_right = self.piece_display
+        rows_s,cols_s,useless = self.state.shape
+        
+        row_top+=up
+        if row_top<0:
+            new_arr = np.full((abs(row_top),cols_s,3),255)
+            self.state = np.append(new_arr,self.state,axis=0)
+            row_top = 0
+            row_bottom+=1
+            rows_s,cols_s,useless = self.state.shape
+        
             
+        row_bottom-=down
+        if row_bottom >rows_s:
+            diff = row_bottom-rows_s
+            new_arr = np.full((diff,cols_s,3),255)
+            self.state = np.append(self.state,new_arr,axis=0)
+            row_bottom = self.state.shape[0]
+            rows_s,cols_s,useless = self.state.shape
+            
+        col_left+=left
+        if col_left < 0:
+            new_arr = np.full((rows_s,abs(col_left),3),255)
+            self.state = np.append(new_arr,self.state,axis=1)
+            col_left = 0
+            col_right+=1
+            rows_s,cols_s,useless = self.state.shape
+            
+        col_right-=right
+        if col_right > cols_s:
+            diff = col_right-cols_s
+            new_arr = np.full((rows_s,diff,3),255)
+            self.state = np.append(self.state,new_arr,axis=1)
+            col_right = self.state.shape[1]
+            rows_s,cols_s,useless = self.state.shape
+
+        self.piece_display = (row_top,row_bottom,col_left,col_right)
+
+         
+         
+         
+       
         

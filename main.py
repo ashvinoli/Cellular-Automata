@@ -32,17 +32,12 @@ def def_state():
         for i in range(total_items):
             row_data,col_data = row_data_collective[i],col_data_collective[i]
             if len(row_data) >0 and len(col_data)>0:
-                for i in range(row_data[0]-1,row_data[1]):
-                    for j in range(col_data[0]-1,col_data[1]):
-                        state[i,j] = (0,0,0)
+                state[row_data[0]-1:row_data[1],col_data[0]-1:col_data[1]] = (0,0,0)
             elif len(row_data) >0:
-                for i in range(row_data[0]-1,row_data[1]):
-                    for j in range(cols):
-                        state[i,j] = (0,0,0)
-            elif len(col_data)>0:
-                for i in range(rows):
-                    for j in range(col_data[0]-1,col_data[1]):
-                        state[i,j] = (0,0,0)
+                state[row_data[0]-1:row_data[1]] = (0,0,0)             
+            elif len(col_data)>0:                
+                state[:,col_data[0]-1:col_data[1]]= (0,0,0)
+
 
     function = functions[config['function']]
     return state,function
