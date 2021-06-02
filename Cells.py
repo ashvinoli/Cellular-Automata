@@ -5,7 +5,7 @@ import numpy as np
 
 class cell:
     def __init__(self,w,h,left_top,screen,color):
-        self.rect = pygame.Rect(left_top[0],left_top[1],w,h)
+        self.rect = pygame.Rect(left_top[0],left_top[1],w,h)        
         self.screen = screen
         self.color = color
 
@@ -22,50 +22,58 @@ class cells:
         self.screen = screen
         self.screen_size = screen_width,screen_height
         self.all_cells = []
-        self.initialize()
 
 
     def initialize(self):
+        self.get_single_cell_size()
         rows,cols,useless = self.grid_values.shape
-        rect_width = self.screen_size[0]/cols
-        rect_height = self.screen_size[1]/rows
-
-
         for i in range(rows):
             for j in range(cols):
-                left_top =j*rect_width,i*rect_height
-                self.all_cells.append(cell(rect_width,rect_height,left_top,self.screen,self.grid_values[i,j]))
+                left_top =j*self.rect_width,i*self.rect_height
+                self.all_cells.append(cell(self.rect_width,self.rect_height,left_top,self.screen,self.grid_values[i,j]))
 
     def draw(self):
         for item in self.all_cells:
             item.draw_me()
+
+    def get_single_cell_size(self):
+        rows,cols,useless = self.grid_values.shape
+        self.rect_width = self.screen_size[0]/cols
+        self.rect_height = self.screen_size[1]/rows
+        return self.rect_width,self.rect_height
+
+    
 
 
 class main_app:
     def __init__(self,initial_state,rule):
         self.state = initial_state
         self.aspect_ratio = initial_state.shape
+        self.display = self.state.copy()
         self.piece_display = (0,self.aspect_ratio[0],0,self.aspect_ratio[1])
         self.rule = rule
+        self.drag = False
+        self.last_mouse = ()
         self.run()
 
     def run(self):
         pygame.init()
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        w, h = pygame.display.get_surface().get_size()
+        self.w, self.h = pygame.display.get_surface().get_size()
         black = (0,0,0)
         while True:
             self.handle_events()
             self.screen.fill(black)
             self.update_display()
-            my_cells = cells(self.display,w,h,self.screen)
+            my_cells = cells(self.display,self.w,self.h,self.screen)
+            my_cells.initialize()
             my_cells.draw()
             pygame.display.flip()
             self.state = self.rule(self.state)            
             time.sleep(0.01)
 
     def handle_events(self):
-        self.aspect_ratio = self.state.shape
+        self.aspect_ratio = self.display.shape
         for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
@@ -74,27 +82,54 @@ class main_app:
                         sys.exit()
                     if event.key == pygame.K_f:
                         #zoom in
-                        scale_rows = round(0.1*(self.aspect_ratio[0]))
-                        scale_cols = round(0.1*(self.aspect_ratio[1]))
-                        self.proportion(scale_rows,scale_rows,scale_cols,scale_cols)
+                        self.zoom(1)
                     if event.key == pygame.K_g:
                         #zoom out
-                        scale_rows = round(-0.1*(self.aspect_ratio[0]))
-                        scale_cols = round(-0.1*(self.aspect_ratio[1]))
-                        self.proportion(scale_rows,scale_rows,scale_cols,scale_cols)
+                        self.zoom(-1)
                     if event.key == pygame.K_LEFT:
                         #pan left
-                        self.proportion(0,0,-1,1)
+                        self.move_left(1)
                     if event.key == pygame.K_RIGHT:
                         #pan right
-                        self.proportion(0,0,1,-1)
+                        self.move_left(-1)
                     if event.key == pygame.K_UP:
                         #pan up
-                        self.proportion(-1,1,0,0)
+                        self.move_up(1)
                     if event.key == pygame.K_DOWN:
                         #pan down
-                        self.proportion(1,-1,0,0)
+                        self.move_up(-1)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.drag = True
+                    self.last_mouse = pygame.mouse.get_rel()
 
+                        
+                if event.type == pygame.MOUSEBUTTONUP:
+                    self.drag = False
+
+                if event.type == pygame.MOUSEMOTION:
+                    if self.drag == True:
+                        self.last_mouse = pygame.mouse.get_rel()                      
+                        my_cells_size = cells(self.display,self.w,self.h,self.screen).get_single_cell_size()
+                        left = round(self.last_mouse[0]/my_cells_size[0])
+                        top = round(self.last_mouse[1]/my_cells_size[1])                       
+                        self.move_left(left)
+                        self.move_up(top)
+                        
+                if event.type == pygame.MOUSEWHEEL:
+                    self.zoom(event.y)
+                        
+
+    def move_left(self,unit):
+        self.proportion(0,0,-1*unit,1*unit)
+
+    def move_up(self,unit):
+        self.proportion(-1*unit,1*unit,0,0)
+                        
+    def zoom(self,unit):
+         scale_rows = round(unit*0.1*(self.aspect_ratio[0]))
+         scale_cols = round(unit*0.1*(self.aspect_ratio[1]))
+         self.proportion(scale_rows,scale_rows,scale_cols,scale_cols)
+         
     def update_display(self):
         self.display = self.state[self.piece_display[0]:self.piece_display[1],self.piece_display[2]:self.piece_display[3]]
         
