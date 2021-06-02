@@ -44,7 +44,8 @@ class cells:
 class main_app:
     def __init__(self,initial_state,rule):
         self.state = initial_state
-        self.piece_display = (0,self.state.shape[0],0,self.state.shape[1])
+        self.aspect_ratio = initial_state.shape
+        self.piece_display = (0,self.aspect_ratio[0],0,self.aspect_ratio[1])
         self.rule = rule
         self.run()
 
@@ -64,6 +65,7 @@ class main_app:
             time.sleep(0.01)
 
     def handle_events(self):
+        self.aspect_ratio = self.state.shape
         for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
@@ -72,15 +74,19 @@ class main_app:
                         sys.exit()
                     if event.key == pygame.K_f:
                         #zoom in
-                        self.proportion(1,1,1,1)
+                        scale_rows = round(0.1*(self.aspect_ratio[0]))
+                        scale_cols = round(0.1*(self.aspect_ratio[1]))
+                        self.proportion(scale_rows,scale_rows,scale_cols,scale_cols)
                     if event.key == pygame.K_g:
                         #zoom out
-                        self.proportion(-1,-1,-1,-1)
+                        scale_rows = round(-0.1*(self.aspect_ratio[0]))
+                        scale_cols = round(-0.1*(self.aspect_ratio[1]))
+                        self.proportion(scale_rows,scale_rows,scale_cols,scale_cols)
                     if event.key == pygame.K_LEFT:
                         #pan left
                         self.proportion(0,0,-1,1)
                     if event.key == pygame.K_RIGHT:
-                        #pan left
+                        #pan right
                         self.proportion(0,0,1,-1)
                     if event.key == pygame.K_UP:
                         #pan up
@@ -101,8 +107,8 @@ class main_app:
         if row_top<0:
             new_arr = np.full((abs(row_top),cols_s,3),255)
             self.state = np.append(new_arr,self.state,axis=0)
+            row_bottom+=abs(row_top)
             row_top = 0
-            row_bottom+=1
             rows_s,cols_s,useless = self.state.shape
         
             
@@ -118,8 +124,8 @@ class main_app:
         if col_left < 0:
             new_arr = np.full((rows_s,abs(col_left),3),255)
             self.state = np.append(new_arr,self.state,axis=1)
+            col_right+=abs(col_left)
             col_left = 0
-            col_right+=1
             rows_s,cols_s,useless = self.state.shape
             
         col_right-=right
