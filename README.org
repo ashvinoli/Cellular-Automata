@@ -33,3 +33,9 @@ by default. There is only another function or lets just say rule which is pretty
 
 * Start clean
 If you want to start with clean grid just make the "rows":[] and "cols":[] in the "config.json" file
+
+* Run
+#+BEGIN_SRC 
+pip install -r requirements
+python main.py
+#+END_SRC
