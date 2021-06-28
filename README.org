@@ -1,0 +1,35 @@
+#+AUTHOR:Ashvin Oli
+#+TITLE: Cellular Automata
+
+* Introduction
+This is a simple cellular automata program with two built in rules. One is a rule I made up. Another is Conway's Game of Life's rule.
+The default rule is conway's and it has been mentioned in the config file.
+
+* KEYS
+- SPACE-Pause/Play
+- ESC-Quit
+- UP/DOWN/LEFT/RIGHT-Pan Up/Down/Left/Right
+- Scroll-Zoom
+- Click-Toggle grid cells state
+- CLick and Drag-PAN
+
+* Setting up the grid by clicking
+Initially the system is PAUSED, i.e you may freely click on the cells to make initial state. Clicking on the grid will 
+toggle their states changing from dead to alive. Black cells are alive ones. Pressing SPACE will PLAY/PAUSE the system. In any time
+you may pause and alter the program's state
+by clicking the grid to make it dead or alive. Zoom in or Zoom out with mouse scroll. Pan with mouse key press. UP,DOWN,LEFT,RIGHT
+arrows may be used to navigate around. The grid is virtually infinite.
+
+* Setting up the grid by config file
+You may see in "config.json" some configuration. Size is the inital grid state i.e provided is of
+ 50 rows and 80 columns. You may change it. You may manually put locations like [1,2], etc inside like
+'individual':[[1,2], [2,3] ], but who would do that instead of just clicking on the grid. And in the range
+section "rows" and "cols" control rows and colums which are alive i.e coloured black. Given default is [20,30] in rows
+and just below it is [30,60]. Remember to match [] in rows and cols. The rule is simple, what I have given
+colors rows from 20 to 40 and cols form 30 to 60 to black. If you want to color entire rows or columns just put [] 
+in the rows if you want to select entire rows, and [] in columns for entire columns. Messing up the json file 
+may throw error, if there are any syntax errors, so be careful while altering "config.json". The 'funciton' is 'conway'
+by default. There is only another function or lets just say rule which is pretty useless.
+
+* Start clean
+If you want to start with clean grid just make the "rows":[] and "cols":[] in the "config.json" file

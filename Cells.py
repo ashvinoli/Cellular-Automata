@@ -78,7 +78,7 @@ class main_app:
         self.drag = False
         self.last_mouse = ()
         self.cur_mouse_pos = (0,0)
-        self.play_pause = True
+        self.play_pause = False
         self.clicked = False
         self.run()
 
@@ -126,6 +126,7 @@ class main_app:
              self.last_mouse = pygame.mouse.get_rel()
              self.cur_mouse_pos = pygame.mouse.get_pos()
              self.clicked = True
+             
         if event.type == pygame.MOUSEBUTTONUP:
             self.drag = False        
         if event.type == pygame.MOUSEMOTION:
