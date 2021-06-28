@@ -122,10 +122,12 @@ class main_app:
 
     def handle_mouse_events(self,event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-             self.drag = True
-             self.last_mouse = pygame.mouse.get_rel()
-             self.cur_mouse_pos = pygame.mouse.get_pos()
-             self.clicked = True
+             if event.button ==2:
+                 self.drag = True
+                 self.last_mouse = pygame.mouse.get_rel()
+             if event.button == 1:
+                 self.cur_mouse_pos = pygame.mouse.get_pos()
+                 self.clicked = True
              
         if event.type == pygame.MOUSEBUTTONUP:
             self.drag = False        
