@@ -1,13 +1,13 @@
 {
-    "size":[10,15],
+    "size":[50,80],
     "initial-state":{
 	"individual":[
 
 	],
 	"range":{
-	    "rows":[[4,8]],
-	    "cols":[[5,10]]
+	    "rows":[[20,40],[50,50]],
+	    "cols":[[20,60],[]]
 	}
     },
-    "function":"blank"
+    "function":"conway"
 }

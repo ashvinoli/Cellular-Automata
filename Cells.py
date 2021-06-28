@@ -4,16 +4,31 @@ import time
 import numpy as np
 
 class cell:
-    def __init__(self,w,h,left_top,screen,color):
-        self.rect = pygame.Rect(left_top[0],left_top[1],w,h)        
+    def __init__(self,w,h,left_top,screen,color,i,j):
+        self.rect = pygame.Rect(left_top[0], left_top[1], w, h)
+        #print(f"top:{self.rect.top}, left:{self.rect.left}, right:{self.rect.right}, bottom:{self.rect.bottom}")
         self.screen = screen
         self.color = color
+        self.i = i
+        self.j = j
 
 
     def draw_me(self):
         pygame.draw.rect(self.screen,self.color,self.rect)
         #draw border on the rectangles
         pygame.draw.rect(self.screen,(40,40,40),self.rect,1)
+
+    def am_i_clicked(self,mouse_pos):       
+        x_mouse,y_mouse = mouse_pos
+        return (self.rect.left<=x_mouse<=self.rect.right) and (self.rect.top<=y_mouse<=self.rect.bottom)
+
+    def am_clicked(self):
+        if self.color[0]==0:
+            self.color = (255, 255, 255)
+        else:
+            self.color = (0, 0, 0)
+        return self.i, self.j
+            
 
 
 class cells:
@@ -30,11 +45,19 @@ class cells:
         for i in range(rows):
             for j in range(cols):
                 left_top =j*self.rect_width,i*self.rect_height
-                self.all_cells.append(cell(self.rect_width,self.rect_height,left_top,self.screen,self.grid_values[i,j]))
+                self.all_cells.append(cell(self.rect_width,self.rect_height,left_top,self.screen,self.grid_values[i,j],i,j))
 
     def draw(self):
         for item in self.all_cells:
             item.draw_me()
+
+    def index_clicked(self,mouse_pos):
+        for item in self.all_cells:
+            if (item.am_i_clicked(mouse_pos)==True):
+                return item.am_clicked()
+                
+                
+        
 
     def get_single_cell_size(self):
         rows,cols,useless = self.grid_values.shape
@@ -54,6 +77,9 @@ class main_app:
         self.rule = rule
         self.drag = False
         self.last_mouse = ()
+        self.cur_mouse_pos = (0,0)
+        self.play_pause = True
+        self.clicked = False
         self.run()
 
     def run(self):
@@ -67,57 +93,77 @@ class main_app:
             self.update_display()
             my_cells = cells(self.display,self.w,self.h,self.screen)
             my_cells.initialize()
+            if self.clicked:
+                self.handle_cell_clicked(my_cells)                
             my_cells.draw()
             pygame.display.flip()
-            self.state = self.rule(self.state)            
+            if self.play_pause:
+                self.state = self.rule(self.state)            
             time.sleep(0.01)
 
+    def handle_cell_clicked(self,my_cells):
+        location_clicked = my_cells.index_clicked(self.cur_mouse_pos)
+        offsets = self.piece_display[0],self.piece_display[2]
+        loc_x,loc_y = location_clicked[0]+offsets[0],location_clicked[1]+offsets[1]
+        if self.state[loc_x,loc_y,0] == 0:
+            self.state[loc_x,loc_y] = [255,255,255]
+        else:
+            self.state[loc_x,loc_y] = [0,0,0]
+        self.clicked = False
+    
     def handle_events(self):
         self.aspect_ratio = self.display.shape
         for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        sys.exit()
-                    if event.key == pygame.K_f:
-                        #zoom in
-                        self.zoom(1)
-                    if event.key == pygame.K_g:
-                        #zoom out
-                        self.zoom(-1)
-                    if event.key == pygame.K_LEFT:
-                        #pan left
-                        self.move_left(1)
-                    if event.key == pygame.K_RIGHT:
-                        #pan right
-                        self.move_left(-1)
-                    if event.key == pygame.K_UP:
-                        #pan up
-                        self.move_up(1)
-                    if event.key == pygame.K_DOWN:
-                        #pan down
-                        self.move_up(-1)
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.drag = True
-                    self.last_mouse = pygame.mouse.get_rel()
+                    self.handle_keyboard_events(event)
+                self.handle_mouse_events(event)
 
-                        
-                if event.type == pygame.MOUSEBUTTONUP:
-                    self.drag = False
+    def handle_mouse_events(self,event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+             self.drag = True
+             self.last_mouse = pygame.mouse.get_rel()
+             self.cur_mouse_pos = pygame.mouse.get_pos()
+             self.clicked = True
+        if event.type == pygame.MOUSEBUTTONUP:
+            self.drag = False        
+        if event.type == pygame.MOUSEMOTION:
+            if self.drag == True:
+                self.last_mouse = pygame.mouse.get_rel()                      
+                my_cells_size = cells(self.display,self.w,self.h,self.screen).get_single_cell_size()
+                left = round(self.last_mouse[0]/my_cells_size[0])
+                top = round(self.last_mouse[1]/my_cells_size[1])                       
+                self.move_left(left)
+                self.move_up(top)                        
+        if event.type == pygame.MOUSEWHEEL:            
+            self.zoom(event.y)
 
-                if event.type == pygame.MOUSEMOTION:
-                    if self.drag == True:
-                        self.last_mouse = pygame.mouse.get_rel()                      
-                        my_cells_size = cells(self.display,self.w,self.h,self.screen).get_single_cell_size()
-                        left = round(self.last_mouse[0]/my_cells_size[0])
-                        top = round(self.last_mouse[1]/my_cells_size[1])                       
-                        self.move_left(left)
-                        self.move_up(top)
-                        
-                if event.type == pygame.MOUSEWHEEL:
-                    self.zoom(event.y)
-                        
+                    
+    def handle_keyboard_events(self,event):
+        if event.key == pygame.K_ESCAPE:
+            sys.exit()
+        if event.key == pygame.K_f:
+            #zoom in
+            self.zoom(1)
+        if event.key == pygame.K_g:
+            #zoom out
+            self.zoom(-1)
+        if event.key == pygame.K_LEFT:
+            #pan left
+            self.move_left(1)
+        if event.key == pygame.K_RIGHT:
+            #pan right
+            self.move_left(-1)
+        if event.key == pygame.K_UP:
+            #pan up
+            self.move_up(1)
+        if event.key == pygame.K_DOWN:
+            #pan down
+            self.move_up(-1)
+        if event.key == pygame.K_SPACE:
+            self.play_pause = not self.play_pause
+                   
 
     def move_left(self,unit):
         self.proportion(0,0,-1*unit,1*unit)
